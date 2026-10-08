@@ -116,13 +116,20 @@ def find_outages(
 
 
 def data_completeness(readings: pd.DataFrame, interval, start, end) -> pd.Series:
-    """Share of sampling slots in ``[start, end)`` that contain at least one reading."""
+    """Share of sampling slots in ``[start, end)`` that contain at least one reading.
+
+    Slots are anchored at ``start``; a reading counts for the slot whose centre it is
+    closest to, so jitter of up to half an interval does not change the result.
+    """
     iv = _interval(interval)
     s, e = _utc(start), _utc(end)
     slots = math.ceil((e - s) / iv)
     sub = _clip(readings, s, e)
-    slot_index = (sub["timestamp"] - s) // iv
-    filled = slot_index.groupby(sub["node_id"]).nunique()
+    # Snap each reading to the nearest slot. Flooring would let transmission jitter push a
+    # reading into the previous slot, which double-counts that slot and empties the next one.
+    slot_index = ((sub["timestamp"] - s) / iv).round().astype("int64")
+    keep = (slot_index >= 0) & (slot_index < slots)
+    filled = slot_index[keep].groupby(sub.loc[keep, "node_id"]).nunique()
     nodes = sorted(readings["node_id"].unique())
     return (filled.reindex(nodes, fill_value=0) / slots).clip(upper=1.0).rename("completeness")
 
