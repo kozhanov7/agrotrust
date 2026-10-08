@@ -128,3 +128,4 @@ GitHub release with the wheel and the example results. See [CONTRIBUTING.md](CON
 ## Citation and license
 
 See [CITATION.cff](CITATION.cff). Released under the [MIT License](LICENSE).
+# agrotrust
