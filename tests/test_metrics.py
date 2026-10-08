@@ -3,7 +3,7 @@ import math
 import pandas as pd
 import pytest
 
-from agrotrust_metrics.io import clean_events
+from agrotrust_metrics.io import clean_events, clean_readings
 from agrotrust_metrics.metrics import (
     attach_causes,
     data_completeness,
@@ -16,6 +16,7 @@ from agrotrust_metrics.metrics import (
     packet_delivery_ratio,
     summarize,
 )
+from agrotrust_metrics.simulate import simulate_fleet
 
 IV = pd.Timedelta(minutes=10)
 
@@ -85,6 +86,19 @@ def test_completeness_counts_filled_slots(make_readings, t0):
 def test_completeness_counts_a_slot_once(make_readings, t0):
     readings = make_readings([0, 1, 2, 10])
     assert data_completeness(readings, IV, t0, t0 + minutes(20))["A"] == pytest.approx(1.0)
+
+
+def test_completeness_is_robust_to_jitter(make_readings):
+    # first reading arrives late, later ones early: flooring to slots would lose a slot
+    readings = make_readings([0.5, 10.1, 20.4, 29.9, 40.2])
+    start = readings["timestamp"].min()
+    assert data_completeness(readings, IV, start, start + minutes(50))["A"] == pytest.approx(1.0)
+
+
+def test_completeness_on_simulated_data_matches_losses():
+    readings, _ = simulate_fleet(3, 20, seed=4, outage_rate=0.0, loss_prob=0.05)
+    table = summarize(clean_readings(readings), IV)
+    assert table["completeness"].between(0.93, 0.97).all()
 
 
 def test_pdr_from_frame_counter(make_readings):
