@@ -7,7 +7,7 @@ license: MIT
 authors:
   - given-names: Sultan
     affiliation: Astana IT University
-repository-code: "https://github.com/<your-username>/agrotrust-metrics"
+repository-code: "https://github.com/kozhanov7/agrotrust"
 keywords:
   - IoT
   - reliability
