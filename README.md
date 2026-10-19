@@ -1,6 +1,6 @@
 # agrotrust-metrics
 
-[![CI](https://github.com/<your-username>/agrotrust-metrics/actions/workflows/ci.yml/badge.svg)](https://github.com/<your-username>/agrotrust-metrics/actions/workflows/ci.yml)
+[![CI](https://github.com/kozhanov7/agrotrust/actions/workflows/ci.yml/badge.svg)](https://github.com/kozhanov7/agrotrust/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![Python](https://img.shields.io/badge/python-3.10%E2%80%933.13-blue)
 
@@ -20,7 +20,7 @@ greenhouse testbed.
 ## Installation
 
 ```bash
-git clone https://github.com/<your-username>/agrotrust-metrics.git
+git clone https://github.com/kozhanov7/agrotrust.git
 cd agrotrust-metrics
 pip install -e .            # or: pip install -e ".[dev]" for tests and linting
 ```
@@ -102,6 +102,36 @@ With 1% random packet loss and up to 30 s of timing jitter, all injected outages
 or more intervals were detected (recall 1.0, precision 1.0 over 20 seeds), with a median
 error in outage length of about 3 minutes. The test suite repeats a strict version of this
 check on every commit.
+
+## Docker
+
+```bash
+docker build -t agrotrust-metrics .
+mkdir -p data && chmod 777 data
+docker run --rm -v "$PWD/data:/data" agrotrust-metrics simulate --nodes 14 --days 30 --out /data
+docker run --rm -v "$PWD/data:/data" agrotrust-metrics summarize /data/readings.csv --events /data/events.csv
+```
+
+The image is built in two stages: the first one builds the wheel, the second one only
+installs it, so build tools do not end up in the final image. The tool runs as a non-root
+user.
+
+## Jenkins pipeline
+
+`Jenkinsfile` describes the pipeline that runs on a local Jenkins:
+
+1. checkout, Python virtual environment, `ruff` lint and format check;
+2. unit tests with `pytest` (JUnit report and coverage, 90% gate);
+3. Docker image build, tagged with the build number and short commit hash;
+4. a run of the image on a small simulated dataset, the summary is kept as an artifact;
+5. optional push to Docker Hub (parameter `PUSH_IMAGE`, credentials id `dockerhub`);
+6. deploy to Minikube: the image is loaded into the cluster and `k8s/job.yaml` runs the
+   analysis as a Kubernetes Job.
+
+Jenkins polls the repository every 2 minutes, so each commit to `main` starts a build.
+On macOS the setup was: `brew install colima docker jenkins-lts minikube kubectl python@3.12`,
+`colima start`, `minikube start --driver=docker`, `brew services start jenkins-lts`, then a
+Pipeline job "Pipeline script from SCM" pointing to this repository.
 
 ## Development
 
