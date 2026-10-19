@@ -1,0 +1,33 @@
+# Batch analysis run: simulate a month of greenhouse data and compute the reliability metrics.
+# IMAGE_TAG is replaced by the Jenkins pipeline.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: agrotrust-analysis
+  namespace: agrotrust
+  labels:
+    app: agrotrust-metrics
+spec:
+  backoffLimit: 2
+  ttlSecondsAfterFinished: 3600
+  template:
+    metadata:
+      labels:
+        app: agrotrust-metrics
+    spec:
+      restartPolicy: Never
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+      containers:
+        - name: analysis
+          image: IMAGE_TAG
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh", "-c"]
+          args:
+            - >
+              agrometrics simulate --nodes 14 --days 30 --seed 42 --out /tmp/data &&
+              agrometrics summarize /tmp/data/readings.csv --events /tmp/data/events.csv
+          resources:
+            requests: { cpu: "250m", memory: "256Mi" }
+            limits: { cpu: "1", memory: "512Mi" }
