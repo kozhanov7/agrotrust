@@ -51,7 +51,7 @@ jobs:
         run: pytest --cov=agrotrust_metrics --cov-report=term-missing --cov-report=xml
       - name: Upload coverage report
         if: matrix.os == 'ubuntu-latest' && matrix.python == '3.12'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-report
           path: coverage.xml
@@ -74,7 +74,7 @@ jobs:
           agrometrics plot data/readings.csv --events data/events.csv --out timeline.png --causes-out causes.png
       - name: Validate detection against ground truth
         run: python examples/validate_detection.py --seeds 10 | tee validation.txt
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: example-results
           path: |
@@ -100,7 +100,7 @@ jobs:
           python -m venv /tmp/smoke
           /tmp/smoke/bin/pip install dist/*.whl
           /tmp/smoke/bin/agrometrics --version
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: dist
           path: dist/
