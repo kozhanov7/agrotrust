@@ -22,8 +22,8 @@ pipeline {
     }
 
     environment {
-        // Homebrew tools on a macOS agent; harmless on Linux
-        PATH = "/opt/homebrew/opt/python@3.12/libexec/bin:/opt/homebrew/bin:/usr/local/bin:${env.PATH}"
+        // Homebrew tools and the Docker Desktop credential helper on a macOS agent; harmless on Linux
+        PATH = "/opt/homebrew/opt/python@3.12/libexec/bin:/opt/homebrew/bin:/usr/local/bin:/Applications/Docker.app/Contents/Resources/bin:${env.PATH}"
         IMAGE = 'kozhanov7/agrotrust-metrics'
         TAG = "${env.BUILD_NUMBER}-${env.GIT_COMMIT?.take(7) ?: 'local'}"
     }
@@ -120,8 +120,8 @@ pipeline {
                 }
             }
             steps {
-                // the image is built in the same Docker daemon that Minikube uses
-                // (docker driver), so it is loaded into the cluster without a registry
+                // Minikube runs its own container runtime inside Docker Desktop and does not
+                // see host images, so the image is copied into the cluster without a registry
                 sh '''
                     minikube image load $IMAGE:$TAG
                     kubectl apply -f k8s/namespace.yaml

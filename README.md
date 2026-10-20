@@ -129,9 +129,9 @@ user.
    analysis as a Kubernetes Job.
 
 Jenkins polls the repository every 2 minutes, so each commit to `main` starts a build.
-On macOS the setup was: `brew install colima docker jenkins-lts minikube kubectl python@3.12`,
-`colima start`, `minikube start --driver=docker`, `brew services start jenkins-lts`, then a
-Pipeline job "Pipeline script from SCM" pointing to this repository.
+On macOS the setup is: Docker Desktop, `brew install jenkins-lts minikube kubectl python@3.12`,
+`minikube start --driver=docker`, `brew services start jenkins-lts`, then a Pipeline job
+"Pipeline script from SCM" pointing to this repository.
 
 ## Development
 
